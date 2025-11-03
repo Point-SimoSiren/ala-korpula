@@ -30,7 +30,8 @@
         position: fixed;
         inset: 0;
         background: url("metsamies.png") center/cover no-repeat;
-        opacity: 0.35;
+        opacity: 0.65;
+        filter: contrast(1.05) brightness(1.08);
         z-index: -2;
       }
 
@@ -40,8 +41,8 @@
         inset: 0;
         background: linear-gradient(
           180deg,
-          rgba(15, 32, 18, 0.9) 0%,
-          rgba(18, 35, 24, 0.6) 100%
+          rgba(15, 32, 18, 0.6) 0%,
+          rgba(18, 35, 24, 0.35) 100%
         );
         z-index: -1;
       }
@@ -63,6 +64,29 @@
         line-height: 1.6;
       }
 
+      .cta-button {
+        display: inline-flex;
+        margin-top: 1.6rem;
+        padding: 0.9rem 1.8rem;
+        background: rgba(209, 230, 208, 0.14);
+        border: 1px solid rgba(209, 230, 208, 0.4);
+        border-radius: 999px;
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        transition: transform 160ms ease, background 160ms ease,
+          box-shadow 160ms ease;
+        box-shadow: 0 18px 40px rgba(10, 20, 15, 0.3);
+      }
+
+      .cta-button:hover {
+        background: rgba(209, 230, 208, 0.25);
+        transform: translateY(-2px);
+        box-shadow: 0 20px 48px rgba(10, 20, 15, 0.32);
+      }
+
       main {
         padding: 0 1rem 4rem;
         display: flex;
@@ -77,7 +101,8 @@
         max-width: 48rem;
         width: 100%;
         backdrop-filter: blur(2px);
-        box-shadow: 0 30px 60px rgba(10, 20, 15, 0.3);
+        box-shadow: 0 30px 60px rgba(10, 20, 15, 0.3),
+          0 0 28px rgba(209, 230, 208, 0.25);
         display: grid;
         gap: 2rem;
       }
@@ -140,12 +165,15 @@
   </head>
   <body>
     <header>
-      <h1>Ala-Korpula Polttopuut</h1>
-      <p>
+      <h2>Ala-Korpulan Polttopuupalvelu</h2>
+      <marquee><h1>sivu on vielä rakenteilla..</h1></marquee>
+
+      <!-- <p>
         Ala-Korpula toimittaa perinteiset, hyvin kuivatut polttopuut suoraan
         kotiovellesi. Pitk&auml; kokemus ja huolellinen valikointi takaavat tasaisen
         laadun sek&auml; luotettavat toimitukset ymp&auml;ri vuoden.
-      </p>
+      </p> -->
+      <a class="cta-button" href="game.html">Kokeile tästä saatko pöllin halki</a>
     </header>
 
     <main>
@@ -170,8 +198,8 @@
             </thead>
             <tbody>
               <tr>
-                <td>Sekaklapi</td>
-                <td>90 &euro; / m&sup3;</td>
+                <!-- <td>Sekaklapi</td>
+                <td>90 &euro; / m&sup3;</td> -->
               </tr>
             </tbody>
           </table>
@@ -179,7 +207,7 @@
 
         <section class="contact">
           <h2 class="section-title">Yhteystiedot</h2>
-          <p>
+          <!-- <p>
             S&auml;hk&ouml;posti:
             <a class="contact-link" href="mailto:hannu@ala-korpula.fi"
               >hannu@ala-korpula.fi</a
@@ -188,7 +216,7 @@
           <p>
             Puhelin:
             <a class="contact-link" href="tel:+358509109926">050&nbsp;910&nbsp;9926</a>
-          </p>
+          </p> -->
         </section>
       </article>
     </main>

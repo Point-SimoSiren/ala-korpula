@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="fi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Halkopeli | Ala-Korpula</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: radial-gradient(circle at top, #1e3724 0%, #0d1a12 55%, #050a08 100%);
+        color: #f3f7f2;
+        overflow: hidden;
+      }
+
+      #hud {
+        position: fixed;
+        inset: 1.2rem auto auto 50%;
+        transform: translateX(-50%);
+        background: rgba(12, 24, 16, 0.65);
+        border: 1px solid rgba(209, 230, 208, 0.2);
+        border-radius: 14px;
+        padding: 0.9rem 1.6rem;
+        text-align: center;
+        letter-spacing: 0.03em;
+        backdrop-filter: blur(6px);
+        box-shadow: 0 18px 40px rgba(6, 12, 8, 0.55);
+        z-index: 10;
+      }
+
+      #hud h1 {
+        margin: 0 0 0.3rem;
+        font-size: clamp(1.6rem, 3vw, 2rem);
+        letter-spacing: 0.08em;
+      }
+
+      #hud p {
+        margin: 0.2rem 0;
+        font-size: 0.95rem;
+        opacity: 0.85;
+      }
+
+      #hud span {
+        display: block;
+        margin-top: 0.4rem;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: #d1e6d0;
+      }
+
+      .back-button {
+        position: fixed;
+        top: 1.2rem;
+        left: 1.2rem;
+        padding: 0.65rem 1.2rem;
+        border-radius: 999px;
+        border: 1px solid rgba(209, 230, 208, 0.45);
+        color: #d1e6d0;
+        text-decoration: none;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        background: rgba(12, 24, 16, 0.55);
+        backdrop-filter: blur(6px);
+        box-shadow: 0 14px 28px rgba(6, 12, 8, 0.45);
+        transition: transform 160ms ease, background 160ms ease,
+          box-shadow 160ms ease;
+        z-index: 9;
+      }
+
+      .back-button:hover {
+        transform: translateY(-2px);
+        background: rgba(209, 230, 208, 0.22);
+        box-shadow: 0 18px 36px rgba(6, 12, 8, 0.5);
+      }
+
+      #scene {
+        display: block;
+        width: 100vw;
+        height: 100vh;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="hud">
+      <h1>Halkomisharjoitus</h1>
+      <p>Napsauta hiirell&auml; kirveen isku - osu klapiin pilkkoaksesi sen.</p>
+      <span id="status">Valmiina iskuun</span>
+    </div>
+    <a class="back-button" href="index.html">Takaisin</a>
+    <canvas id="scene"></canvas>
+
+    <script type="module">
+      import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js";
+
+      const canvas = document.getElementById("scene");
+      const statusText = document.getElementById("status");
+
+      const renderer = new THREE.WebGLRenderer({
+        canvas,
+        antialias: true,
+      });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.8));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+      const scene = new THREE.Scene();
+      scene.fog = new THREE.Fog(0x0b150d, 20, 50);
+
+      const camera = new THREE.PerspectiveCamera(
+        45,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        100
+      );
+      camera.position.set(0, 3.2, 7.2);
+      camera.lookAt(0, 1.5, 0);
+
+      const ambientLight = new THREE.AmbientLight(0xb3c9b3, 0.35);
+      scene.add(ambientLight);
+
+      const spotlight = new THREE.SpotLight(0xf0f7ed, 1.9, 40, Math.PI / 5, 0.3, 1.1);
+      spotlight.position.set(6, 10, 6);
+      spotlight.castShadow = true;
+      spotlight.shadow.mapSize.width = 1024;
+      spotlight.shadow.mapSize.height = 1024;
+      scene.add(spotlight);
+
+      const backLight = new THREE.PointLight(0x94d5ac, 0.4, 20);
+      backLight.position.set(-3, 4, -6);
+      scene.add(backLight);
+
+      const swingDuration = 0.7;
+      const startAngle = -1.05;
+      const strikeAngle = -2.4;
+      const axePivotOffset = 0.7;
+      const axeRestPosition = new THREE.Vector3(
+        0.08,
+        3.05 + axePivotOffset,
+        1.42
+      );
+      const axeStrikePosition = new THREE.Vector3(
+        -0.04,
+        2.05 + axePivotOffset,
+        0.88
+      );
+
+      const ground = new THREE.Mesh(
+        new THREE.CylinderGeometry(12, 12, 0.4, 48),
+        new THREE.MeshStandardMaterial({
+          color: 0x273c2b,
+          roughness: 0.85,
+          metalness: 0.05,
+        })
+      );
+      ground.receiveShadow = true;
+      ground.position.y = -0.2;
+      scene.add(ground);
+
+      const choppingBlock = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.9, 1.1, 0.8, 24),
+        new THREE.MeshStandardMaterial({
+          color: 0x5c3b1e,
+          roughness: 0.7,
+        })
+      );
+      choppingBlock.castShadow = true;
+      choppingBlock.receiveShadow = true;
+      choppingBlock.position.set(0, 0.4, 0);
+      scene.add(choppingBlock);
+
+      const barkMaterial = new THREE.MeshStandardMaterial({
+        color: 0x4f2c16,
+        roughness: 0.8,
+        metalness: 0.08,
+        side: THREE.DoubleSide,
+      });
+
+      const woodMaterial = new THREE.MeshStandardMaterial({
+        color: 0xbe8d59,
+        roughness: 0.55,
+        metalness: 0.03,
+        side: THREE.DoubleSide,
+      });
+
+      let logGroup = null;
+      const logRadius = 0.35;
+      const logHeight = 1.25;
+      const logOrigin = new THREE.Vector3(0, 0.8 + logHeight / 2, 0);
+
+      function createLog() {
+        logGroup = new THREE.Group();
+
+        const outer = new THREE.Mesh(
+          new THREE.CylinderGeometry(logRadius, logRadius, logHeight, 48),
+          barkMaterial
+        );
+        outer.castShadow = true;
+        outer.receiveShadow = true;
+
+        const inner = new THREE.Mesh(
+          new THREE.CylinderGeometry(
+            logRadius * 0.85,
+            logRadius * 0.85,
+            logHeight + 0.01,
+            32
+          ),
+          woodMaterial
+        );
+        inner.castShadow = true;
+        inner.receiveShadow = true;
+
+        logGroup.add(outer, inner);
+        logGroup.position.copy(logOrigin);
+        scene.add(logGroup);
+      }
+
+      createLog();
+
+      const axeGroup = new THREE.Group();
+      axeGroup.position.copy(axeRestPosition);
+
+      const axeVisual = new THREE.Group();
+      axeVisual.position.set(0, -axePivotOffset, 0);
+
+      const handleGeometry = new THREE.CylinderGeometry(0.085, 0.06, 2.8, 24, 32);
+      const handlePositions = handleGeometry.attributes.position;
+      const handleHalfHeight = 2.8 / 2;
+      for (let i = 0; i < handlePositions.count; i++) {
+        const y = handlePositions.getY(i);
+        const t = (y + handleHalfHeight) / 2.8;
+        const gripScale =
+          t < 0.65
+            ? 0.72 + 0.22 * Math.pow(Math.sin(Math.PI * Math.min(t, 0.65)), 2)
+            : 0.72;
+        const flareScale =
+          t > 0.65 ? 0.78 + 0.32 * Math.pow(Math.max(0, t - 0.65) * 1.7, 1.4) : 0.78;
+        const scale = t < 0.65 ? gripScale : flareScale;
+        const curveOffset = 0.26 * Math.pow(t, 1.5) - 0.14;
+
+        handlePositions.setX(i, handlePositions.getX(i) * scale + curveOffset);
+        handlePositions.setZ(i, handlePositions.getZ(i) * scale * 0.62);
+      }
+      handlePositions.needsUpdate = true;
+      handleGeometry.computeVertexNormals();
+
+      const handleMaterial = new THREE.MeshStandardMaterial({
+        color: 0xb77a3f,
+        roughness: 0.55,
+        metalness: 0.05,
+      });
+
+      const axeHandle = new THREE.Mesh(handleGeometry, handleMaterial);
+      axeHandle.castShadow = true;
+      axeHandle.receiveShadow = true;
+      axeHandle.position.set(-0.02, -0.05, 0.02);
+      axeHandle.rotation.z = Math.PI / 38;
+
+      const pommel = new THREE.Mesh(new THREE.SphereGeometry(0.14, 20, 14), handleMaterial);
+      pommel.scale.set(1.12, 0.58, 0.7);
+      pommel.position.set(-0.13, -1.38, 0.02);
+      pommel.castShadow = true;
+      pommel.receiveShadow = true;
+
+      const collar = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.13, 0.12, 0.18, 24),
+        new THREE.MeshStandardMaterial({
+          color: 0x4d2f12,
+          roughness: 0.68,
+        })
+      );
+      collar.castShadow = true;
+      collar.receiveShadow = true;
+      collar.position.set(0.1, 0.38, 0);
+      collar.rotation.z = Math.PI / 26;
+
+      const headShape = new THREE.Shape();
+      headShape.moveTo(-0.24, -0.32);
+      headShape.lineTo(0.16, -0.28);
+      headShape.quadraticCurveTo(0.33, 0, 0.18, 0.32);
+      headShape.lineTo(-0.18, 0.34);
+      headShape.lineTo(-0.28, 0.1);
+      headShape.closePath();
+
+      const headGeometry = new THREE.ExtrudeGeometry(headShape, {
+        depth: 0.2,
+        steps: 1,
+        bevelEnabled: false,
+      });
+      headGeometry.translate(0, 0, -0.1);
+      headGeometry.computeVertexNormals();
+
+      const axeHeadBody = new THREE.Mesh(
+        headGeometry,
+        new THREE.MeshStandardMaterial({
+          color: 0x585e62,
+          roughness: 0.38,
+          metalness: 0.88,
+        })
+      );
+      axeHeadBody.castShadow = true;
+      axeHeadBody.receiveShadow = true;
+
+      const bladeGeometry = headGeometry.clone();
+      const bladePositions = bladeGeometry.attributes.position;
+      for (let i = 0; i < bladePositions.count; i++) {
+        const z = bladePositions.getZ(i);
+        bladePositions.setZ(i, Math.max(z, -0.025));
+      }
+      bladePositions.needsUpdate = true;
+      bladeGeometry.computeVertexNormals();
+
+      const axeBlade = new THREE.Mesh(
+        bladeGeometry,
+        new THREE.MeshStandardMaterial({
+          color: 0xdfe6ec,
+          roughness: 0.18,
+          metalness: 1,
+        })
+      );
+      axeBlade.castShadow = false;
+      axeBlade.receiveShadow = false;
+
+      const eye = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.09, 0.1, 0.22, 20),
+        new THREE.MeshStandardMaterial({
+          color: 0x3b3026,
+          roughness: 0.55,
+        })
+      );
+      eye.rotation.x = Math.PI / 2;
+      eye.position.set(-0.05, 0, -0.01);
+      eye.castShadow = true;
+      eye.receiveShadow = true;
+
+      const axeHeadGroup = new THREE.Group();
+      axeHeadGroup.add(axeHeadBody, axeBlade, eye);
+      axeHeadGroup.position.set(0.26, 0.62, -0.04);
+      axeHeadGroup.rotation.set(Math.PI / 10, Math.PI / 2.1, -Math.PI / 9);
+
+      axeVisual.add(axeHandle, pommel, collar, axeHeadGroup);
+      axeGroup.add(axeVisual);
+      axeGroup.rotation.x = startAngle;
+      scene.add(axeGroup);
+
+      const raycaster = new THREE.Raycaster();
+      const pointer = new THREE.Vector2();
+
+      let isSwinging = false;
+      let swingProgress = 0;
+      let registerHit = false;
+      let hasHit = false;
+
+      let splitPieces = [];
+      let resetTimer = -1;
+
+      function createHalfLog(thetaStart, direction) {
+        const group = new THREE.Group();
+        const outerHalf = new THREE.Mesh(
+          new THREE.CylinderGeometry(
+            logRadius,
+            logRadius,
+            logHeight,
+            48,
+            1,
+            false,
+            thetaStart,
+            Math.PI
+          ),
+          barkMaterial
+        );
+
+        const innerHalf = new THREE.Mesh(
+          new THREE.CylinderGeometry(
+            logRadius * 0.85,
+            logRadius * 0.85,
+            logHeight + 0.01,
+            32,
+            1,
+            false,
+            thetaStart,
+            Math.PI
+          ),
+          woodMaterial
+        );
+
+        [outerHalf, innerHalf].forEach((mesh) => {
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
+          group.add(mesh);
+        });
+
+        group.position.set(logOrigin.x + direction * 0.18, logOrigin.y, logOrigin.z);
+        group.rotation.y = direction > 0 ? 0.05 : -0.05;
+        return group;
+      }
+
+      function splitLog() {
+        if (!logGroup) {
+          return;
+        }
+
+        scene.remove(logGroup);
+        logGroup = null;
+
+        const leftHalf = createHalfLog(Math.PI / 2, -1);
+        const rightHalf = createHalfLog(-Math.PI / 2, 1);
+
+        scene.add(leftHalf, rightHalf);
+
+        splitPieces = [
+          {
+            group: leftHalf,
+            velocity: new THREE.Vector3(-0.9, 1.7, 0.14),
+            spin: new THREE.Vector3(0.18, 0.28, 0.95),
+            direction: -1,
+            resting: false,
+          },
+          {
+            group: rightHalf,
+            velocity: new THREE.Vector3(0.9, 1.6, -0.14),
+            spin: new THREE.Vector3(-0.18, -0.26, -0.95),
+            direction: 1,
+            resting: false,
+          },
+        ];
+
+        resetTimer = -1;
+        statusText.textContent = "Hieno isku! Klapi halkesi.";
+      }
+
+      function resetLog() {
+        splitPieces.forEach((piece) => {
+          scene.remove(piece.group);
+        });
+        splitPieces = [];
+        createLog();
+        statusText.textContent = "Valmiina iskuun";
+      }
+
+      function easeOutQuart(t) {
+        return 1 - Math.pow(1 - t, 4);
+      }
+
+      function easeInOutQuad(t) {
+        return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+      }
+
+      function startSwing(targeted) {
+        if (isSwinging) {
+          return;
+        }
+
+        isSwinging = true;
+        swingProgress = 0;
+        registerHit = targeted;
+        hasHit = false;
+        statusText.textContent = targeted
+          ? "T\u00E4ht\u00E4\u00E4t klapiin..."
+          : "Isku karkasi - yrit\u00E4 uudestaan!";
+      }
+
+      window.addEventListener("pointerdown", (event) => {
+        pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+        pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(pointer, camera);
+
+        let intersects = [];
+        if (logGroup) {
+          intersects = raycaster.intersectObject(logGroup, true);
+        }
+
+        startSwing(intersects.length > 0);
+      });
+
+      window.addEventListener("resize", () => {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        renderer.setSize(width, height);
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+      });
+
+      const clock = new THREE.Clock();
+
+      function animate() {
+        requestAnimationFrame(animate);
+        const delta = clock.getDelta();
+
+        if (isSwinging) {
+          swingProgress += delta / swingDuration;
+          const clamped = Math.min(swingProgress, 1);
+
+          if (clamped <= 0.6) {
+            const t = easeOutQuart(clamped / 0.6);
+            axeGroup.rotation.x = startAngle + (strikeAngle - startAngle) * t;
+            axeGroup.position.lerpVectors(axeRestPosition, axeStrikePosition, t);
+            if (!hasHit && registerHit && t > 0.8) {
+              splitLog();
+              hasHit = true;
+            }
+          } else {
+            const t = easeInOutQuad((clamped - 0.6) / 0.4);
+            axeGroup.rotation.x = strikeAngle + (startAngle - strikeAngle) * t;
+            axeGroup.position.lerpVectors(axeStrikePosition, axeRestPosition, t);
+          }
+
+          if (swingProgress >= 1) {
+            isSwinging = false;
+            swingProgress = 0;
+            registerHit = false;
+            if (!hasHit) {
+              statusText.textContent = "Ei osumaa - koeta uudestaan!";
+            }
+            axeGroup.position.copy(axeRestPosition);
+            axeGroup.rotation.x = startAngle;
+          }
+        }
+
+        if (splitPieces.length > 0) {
+          splitPieces.forEach((piece) => {
+            if (piece.resting) {
+              return;
+            }
+            piece.velocity.y -= 6.8 * delta;
+            piece.group.position.addScaledVector(piece.velocity, delta);
+
+            piece.group.rotation.x += piece.spin.x * delta;
+            piece.group.rotation.y += piece.spin.y * delta;
+            piece.group.rotation.z += piece.spin.z * delta;
+
+            if (piece.group.position.y <= 0.62) {
+              piece.group.position.y = 0.62;
+              piece.velocity.set(0, 0, 0);
+              piece.spin.set(0, 0, 0);
+              piece.group.rotation.x = piece.direction * 0.12;
+              piece.group.rotation.y = piece.direction * 0.22;
+              piece.group.rotation.z = piece.direction * -1.08;
+              piece.resting = true;
+            }
+          });
+
+          if (
+            splitPieces.every((piece) => piece.resting) &&
+            resetTimer < 0
+          ) {
+            resetTimer = 2.2;
+            statusText.textContent = "Halko hajosi - uusi klapi tulossa...";
+          }
+
+          if (resetTimer > 0) {
+            resetTimer -= delta;
+            if (resetTimer <= 0) {
+              resetLog();
+            }
+          }
+        }
+
+        renderer.render(scene, camera);
+      }
+
+      animate();
+    </script>
+  </body>
+</html>
