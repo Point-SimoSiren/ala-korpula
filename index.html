@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ala-Korpula Polttopuut</title>
+    <style>
+      :root {
+        --forest-green: #2f5d37;
+        --deep-forest: #1f3b25;
+        --light-forest: rgba(47, 93, 55, 0.85);
+        --accent: #d1e6d0;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        color: #f3f7f2;
+        min-height: 100vh;
+        position: relative;
+        background: var(--deep-forest);
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: url("metsamies.png") center/cover no-repeat;
+        opacity: 0.35;
+        z-index: -2;
+      }
+
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: linear-gradient(
+          180deg,
+          rgba(15, 32, 18, 0.9) 0%,
+          rgba(18, 35, 24, 0.6) 100%
+        );
+        z-index: -1;
+      }
+
+      header {
+        text-align: center;
+        padding: 4rem 1rem 2rem;
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: clamp(2.2rem, 4vw, 3rem);
+        letter-spacing: 0.05em;
+      }
+
+      header p {
+        margin: 0.8rem auto 0;
+        max-width: 40rem;
+        line-height: 1.6;
+      }
+
+      main {
+        padding: 0 1rem 4rem;
+        display: flex;
+        justify-content: center;
+      }
+
+      .info-card {
+        background: var(--light-forest);
+        border: 1px solid rgba(209, 230, 208, 0.25);
+        border-radius: 18px;
+        padding: 2rem;
+        max-width: 48rem;
+        width: 100%;
+        backdrop-filter: blur(2px);
+        box-shadow: 0 30px 60px rgba(10, 20, 15, 0.3);
+        display: grid;
+        gap: 2rem;
+      }
+
+      .section-title {
+        margin: 0 0 1rem;
+        font-size: 1.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--accent);
+      }
+
+      .pricing table {
+        width: 100%;
+        border-collapse: collapse;
+        background: rgba(18, 35, 24, 0.35);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      .pricing th,
+      .pricing td {
+        padding: 1rem;
+        text-align: left;
+      }
+
+      .pricing th {
+        background: rgba(18, 35, 24, 0.6);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 600;
+      }
+
+      .pricing tbody tr:nth-child(odd) {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .contact {
+        display: grid;
+        gap: 0.5rem;
+      }
+
+      .contact-link {
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .contact-link:hover {
+        text-decoration: underline;
+      }
+
+      footer {
+        text-align: center;
+        padding: 2rem 1rem 3rem;
+        color: rgba(243, 247, 242, 0.75);
+        font-size: 0.85rem;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Ala-Korpula Polttopuut</h1>
+      <p>
+        Ala-Korpula toimittaa perinteiset, hyvin kuivatut polttopuut suoraan
+        kotiovellesi. Pitk&auml; kokemus ja huolellinen valikointi takaavat tasaisen
+        laadun sek&auml; luotettavat toimitukset ymp&auml;ri vuoden.
+      </p>
+    </header>
+
+    <main>
+      <article class="info-card">
+        <section>
+          <h2 class="section-title">Palvelu</h2>
+          <p>
+            Tarjolla on laadukasta sekaklapia, joka sopii takkahommiin,
+            puukattiloihin sek&auml; m&ouml;kkik&auml;ytt&ouml;&ouml;n. Sovittaessa j&auml;rjestyy my&ouml;s
+            kuljetus ja lasti voidaan pinota valmiiksi puolestasi.
+          </p>
+        </section>
+
+        <section class="pricing">
+          <h2 class="section-title">Hinnasto</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Tuote</th>
+                <th>Hinta</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Sekaklapi</td>
+                <td>90 &euro; / m&sup3;</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="contact">
+          <h2 class="section-title">Yhteystiedot</h2>
+          <p>
+            S&auml;hk&ouml;posti:
+            <a class="contact-link" href="mailto:hannu@ala-korpula.fi"
+              >hannu@ala-korpula.fi</a
+            >
+          </p>
+          <p>
+            Puhelin:
+            <a class="contact-link" href="tel:+358509109926">050&nbsp;910&nbsp;9926</a>
+          </p>
+        </section>
+      </article>
+    </main>
+
+    <footer>
+      &copy; Ala-Korpula | Ylpe&auml;n&auml; suomalaisesta mets&auml;st&auml;
+    </footer>
+  </body>
+</html>
