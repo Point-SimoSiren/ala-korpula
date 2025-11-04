@@ -3,7 +3,88 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Ala-Korpula toimittaa polttopuuta Tampereella ja Pirkanmaalla – klapit helposti pihaan ilman piilokuluja."
+    />
+    <meta
+      name="keywords"
+      content="polttopuut Tampere, polttopuut Pirkanmaa, klapit Tampere, klapit Pirkanmaa, polttopuupalvelu, polttopuun toimitus"
+    />
+    <meta name="robots" content="index, follow" />
+    <meta name="geo.region" content="FI-06" />
+    <meta name="geo.placename" content="Tampere" />
+    <meta name="geo.position" content="61.4978;23.7610" />
+    <meta name="ICBM" content="61.4978, 23.7610" />
+    <meta property="og:locale" content="fi_FI" />
+    <meta
+      property="og:title"
+      content="Ala-Korpula Polttopuut – Polttopuuta Tampereella ja Pirkanmaalla"
+    />
+    <meta
+      property="og:description"
+      content="Luotettava polttopuiden toimitus Tampereella ja Pirkanmaalla. Kuljetus sisältyy hintaan."
+    />
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:image"
+      content="https://ala-korpula.fi/IMG-20251103-WA0017.jpg"
+    />
+    <meta property="og:url" content="https://ala-korpula.fi" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Ala-Korpula Polttopuut – Polttopuuta Tampereella ja Pirkanmaalla"
+    />
+    <meta
+      name="twitter:description"
+      content="Polttopuut ja klapit Tampereella sekä Pirkanmaalla helposti ja ilman piilokuluja."
+    />
+    <meta
+      name="twitter:image"
+      content="https://ala-korpula.fi/IMG-20251103-WA0017.jpg"
+    />
     <title>Ala-Korpula Polttopuut</title>
+    <link rel="canonical" href="https://ala-korpula.fi" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "name": "Ala-Korpula Polttopuut",
+        "description": "Polttopuuta Tampereella ja Pirkanmaalla ilman piilokuluja.",
+        "url": "https://ala-korpula.fi",
+        "telephone": "+358503800630",
+        "email": "hannu.maijala@iki.fi",
+        "image": [
+          "IMG-20251103-WA0017.jpg",
+          "IMG-20251103-WA0018.jpg",
+          "IMG-20251103-WA0019.jpg",
+          "IMG-20251103-WA0022.jpg",
+          "IMG-20251103-WA0023.jpg"
+        ],
+        "areaServed": [
+          {
+            "@type": "City",
+            "name": "Tampere"
+          },
+          {
+            "@type": "AdministrativeArea",
+            "name": "Pirkanmaa"
+          }
+        ],
+        "serviceType": [
+          "Polttopuun toimitus",
+          "Polttopuut Tampereella",
+          "Klapit Tampereella"
+        ],
+        "address": {
+          "@type": "PostalAddress",
+          "addressCountry": "FI",
+          "addressRegion": "Pirkanmaa",
+          "addressLocality": "Tampere"
+        }
+      }
+    </script>
     <style>
       :root {
         --forest-green: #2f5d37;
@@ -23,13 +104,17 @@
         min-height: 100vh;
         position: relative;
         background: var(--deep-forest);
+        --bg-image: url("IMG-20251103-WA0017.jpg");
       }
 
       body::before {
         content: "";
         position: fixed;
         inset: 0;
-        background: url("metsamies.png") center/cover no-repeat;
+        background-image: var(--bg-image);
+        background-position: center;
+        background-size: cover;
+        background-repeat: no-repeat;
         opacity: 0.65;
         filter: contrast(1.05) brightness(1.08);
         z-index: -2;
@@ -50,6 +135,22 @@
       header {
         text-align: center;
         padding: 4rem 1rem 2rem;
+      }
+
+      .site-domain {
+        display: inline-block;
+        padding: 0.45rem 1.2rem;
+        margin-bottom: 1.4rem;
+        border-radius: 999px;
+        border: 1px solid rgba(209, 230, 208, 0.4);
+        background: rgba(209, 230, 208, 0.12);
+        color: var(--accent);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        font-weight: 600;
+        box-shadow: 0 12px 30px rgba(10, 20, 15, 0.28);
+        backdrop-filter: blur(2px);
       }
 
       header h1 {
@@ -165,14 +266,10 @@
   </head>
   <body>
     <header>
+      <div class="site-domain">ala-korpula.fi</div>
       <h2>Ala-Korpulan Polttopuupalvelu</h2>
-      <marquee><h1>sivu on vielä rakenteilla..</h1></marquee>
+      <marquee><h2>sivu on vielä rakenteilla..</h2></marquee>
 
-      <!-- <p>
-        Ala-Korpula toimittaa perinteiset, hyvin kuivatut polttopuut suoraan
-        kotiovellesi. Pitk&auml; kokemus ja huolellinen valikointi takaavat tasaisen
-        laadun sek&auml; luotettavat toimitukset ymp&auml;ri vuoden.
-      </p> -->
       <a class="cta-button" href="game.html">Kokeile tästä saatko pöllin halki</a>
     </header>
 
@@ -181,9 +278,12 @@
         <section>
           <h2 class="section-title">Palvelu</h2>
           <p>
-            Tarjolla on laadukasta sekaklapia, joka sopii takkahommiin,
-            puukattiloihin sek&auml; m&ouml;kkik&auml;ytt&ouml;&ouml;n. Sovittaessa j&auml;rjestyy my&ouml;s
-            kuljetus ja lasti voidaan pinota valmiiksi puolestasi.
+            Tarjolla on laadukasta sekaklapia, joka sopii saunaan, takkaan,
+            puukattiloihin sek&auml; m&ouml;kkik&auml;ytt&ouml;&ouml;n.
+          </p>
+           <p>
+            Ala-Korpula toimittaa polttopuut Tampereen ja Pirkanmaan alueella pihaan ilman piilokuluja.
+            Kuljetus sisältyy hintaan.
           </p>
         </section>
 
@@ -198,8 +298,9 @@
             </thead>
             <tbody>
               <tr>
-                <!-- <td>Sekaklapi</td>
-                <td>90 &euro; / m&sup3;</td> -->
+                <td>Päivittyy pian..</td>
+                <td>Tiedustele ao. yhteystiedoista..</td>
+                <!-- <td>90 &euro; / m&sup3;</td> -->
               </tr>
             </tbody>
           </table>
@@ -207,22 +308,48 @@
 
         <section class="contact">
           <h2 class="section-title">Yhteystiedot</h2>
-          <!-- <p>
+          <p>
             S&auml;hk&ouml;posti:
-            <a class="contact-link" href="mailto:hannu@ala-korpula.fi"
-              >hannu@ala-korpula.fi</a
+            <a class="contact-link" href="mailto:hannu.maijala@iki.fi"
+              >hannu.maijala@iki.fi</a
             >
           </p>
           <p>
             Puhelin:
-            <a class="contact-link" href="tel:+358509109926">050&nbsp;910&nbsp;9926</a>
-          </p> -->
+            <a class="contact-link" href="tel:+358503800630">050&nbsp;380&nbsp;0630</a>
+          </p>
         </section>
       </article>
     </main>
 
     <footer>
       &copy; Ala-Korpula | Ylpe&auml;n&auml; suomalaisesta mets&auml;st&auml;
+      <br/>
+      Powered By Tarmola Code Garage | tarmola-code.fi
     </footer>
+    <script>
+      (function () {
+        const images = [
+          "IMG-20251103-WA0017.jpg",
+          "IMG-20251103-WA0018.jpg",
+          "IMG-20251103-WA0019.jpg",
+          "IMG-20251103-WA0022.jpg",
+          "IMG-20251103-WA0023.jpg",
+        ];
+
+        let index = 0;
+        const applyBackground = () =>
+          document.body.style.setProperty(
+            "--bg-image",
+            `url("${images[index]}")`
+          );
+
+        applyBackground();
+        setInterval(() => {
+          index = (index + 1) % images.length;
+          applyBackground();
+        }, 8000);
+      })();
+    </script>
   </body>
 </html>
