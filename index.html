@@ -159,6 +159,13 @@
         letter-spacing: 0.05em;
       }
 
+      header h3 {
+        margin: 0;
+        font-size: clamp(2rem, 3.6vw, 2.8rem);
+        letter-spacing: 0.03em;
+        font-weight: 700;
+      }
+
       header p {
         margin: 0.8rem auto 0;
         max-width: 40rem;
@@ -209,11 +216,21 @@
       }
 
       .section-title {
-        margin: 0 0 1rem;
+        margin: 0;
         font-size: 1.5rem;
         text-transform: uppercase;
         letter-spacing: 0.12em;
         color: var(--accent);
+      }
+
+      .info-card > section {
+        display: grid;
+        gap: 0.9rem;
+      }
+
+      .info-card p {
+        margin: 0;
+        line-height: 1.65;
       }
 
       .pricing table {
@@ -243,7 +260,7 @@
 
       .contact {
         display: grid;
-        gap: 0.5rem;
+        gap: 0.6rem;
       }
 
       .contact-link {
@@ -279,12 +296,14 @@
           <p>
             Tuotamme laadukasta koivu- ja sekaklapia, joka sopii moneen käyttöön.
           </p>
-           <p>
-            Sahakatkaisu ja puhdistusseula takaavat ensiluokkaisen laadun. Klapit tehdään tuoreesta puusta kevättalvella ja 
-            kuivataan aurinkoisella ja tuulisella paikalla.
-           <p>
+          <p>
+            Sahakatkaisu ja puhdistusseula takaavat ensiluokkaisen laadun. Klapit
+            tehdään tuoreesta puusta kevättalvella ja kuivataan aurinkoisella ja
+            tuulisella paikalla.
+          </p>
         </section>
 
+        <section>
           <h2 class="section-title">Toimitus ja hinnoittelu</h2>
 
           <p>Toimitamme puut puhdistettuina ja kuivina 6 m3 kippaavalla auton peräkärryllä 6 m3 täysinä kuormina ja 3 m3 puolikuormina.
@@ -299,7 +318,7 @@
           <p>Sekalapi sisältää 2/3 lehtipuuta ja 1/3 havupuuta.</p>
           <p>Hinnat sisältävät ALV 25,5 %. Maksu toimituksen yhteydessä käteisellä tai Mobile Pay:lla.</p>
 
-          <section class="pricing">
+          <div class="pricing">
           
 
           <table>
@@ -335,7 +354,8 @@
               </tr>
             </tbody>
           </table>
-       </section>
+          </div>
+        </section>
 
         <section class="contact">
           <h2 class="section-title">Yhteystiedot</h2>
