@@ -213,6 +213,7 @@
           0 0 28px rgba(209, 230, 208, 0.25);
         display: grid;
         gap: 2rem;
+        overflow-wrap: anywhere;
       }
 
       .section-title {
@@ -226,17 +227,25 @@
       .info-card > section {
         display: grid;
         gap: 0.9rem;
+        min-width: 0;
       }
 
       .info-card p {
-        width: 90%;
-         max-width: 44rem;
+        width: 100%;
+        max-width: 44rem;
         margin: 0;
         line-height: 1.65;
+        overflow-wrap: anywhere;
+        hyphens: auto;
+      }
+
+      .pricing {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
       }
 
       .pricing table {
-        width: 97%;
+        width: 100%;
         border-collapse: collapse;
         background: rgba(18, 35, 24, 0.35);
         border-radius: 12px;
@@ -247,6 +256,7 @@
       .pricing td {
         padding: 1rem;
         text-align: left;
+        overflow-wrap: anywhere;
       }
 
       .pricing th {
@@ -280,6 +290,21 @@
         padding: 2rem 1rem 3rem;
         color: rgba(243, 247, 242, 0.75);
         font-size: 0.85rem;
+      }
+
+      @media (max-width: 600px) {
+        header {
+          padding-top: 3.2rem;
+        }
+
+        .info-card {
+          padding: 1.25rem;
+        }
+
+        .pricing th,
+        .pricing td {
+          padding: 0.75rem 0.6rem;
+        }
       }
     </style>
   </head>
