@@ -25,7 +25,7 @@
         position: fixed;
         inset: 3.6rem auto auto 50%;
         transform: translateX(-50%);
-        width: min(34rem, calc(100vw - 6rem));
+        width: min(40rem, calc(100vw - 2rem));
         background: rgba(12, 24, 16, 0.65);
         border: 1px solid rgba(209, 230, 208, 0.2);
         border-radius: 14px;
@@ -44,18 +44,85 @@
       }
 
       #hud p {
-        margin: 0.2rem 0;
+        margin: 0.2rem 0 0.6rem;
         font-size: 0.95rem;
         opacity: 0.85;
       }
 
-      #hud span {
+      #status {
         display: block;
-        margin-top: 0.4rem;
+        margin-top: 0.5rem;
         font-size: 0.85rem;
         text-transform: uppercase;
-        letter-spacing: 0.2em;
+        letter-spacing: 0.12em;
         color: #d1e6d0;
+      }
+
+      .hud-stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+      }
+
+      .hud-stat {
+        background: rgba(8, 18, 11, 0.55);
+        border: 1px solid rgba(209, 230, 208, 0.14);
+        border-radius: 10px;
+        padding: 0.45rem 0.35rem;
+      }
+
+      .hud-stat-label {
+        display: block;
+        font-size: 0.7rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        opacity: 0.72;
+      }
+
+      .hud-stat-value {
+        display: block;
+        margin-top: 0.16rem;
+        font-size: 1rem;
+        font-weight: 700;
+      }
+
+      .hud-controls {
+        margin-top: 0.65rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.65rem;
+        flex-wrap: wrap;
+      }
+
+      #difficulty {
+        font-size: 0.8rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        opacity: 0.9;
+      }
+
+      .restart-button {
+        border: 1px solid rgba(209, 230, 208, 0.4);
+        border-radius: 999px;
+        color: #d1e6d0;
+        background: rgba(209, 230, 208, 0.1);
+        padding: 0.45rem 1rem;
+        font-weight: 600;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: transform 140ms ease, background 140ms ease;
+      }
+
+      .restart-button:hover {
+        transform: translateY(-1px);
+        background: rgba(209, 230, 208, 0.22);
+      }
+
+      #hud.game-over {
+        border-color: rgba(255, 230, 180, 0.55);
       }
 
       .back-button {
@@ -94,7 +161,11 @@
         #hud {
           padding: 0.8rem 1.1rem;
           inset: 3.2rem auto auto 50%;
-          width: min(32rem, calc(100vw - 7rem));
+          width: min(32rem, calc(100vw - 1rem));
+        }
+
+        .hud-stats {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
         .back-button {
@@ -106,7 +177,29 @@
   <body>
     <div id="hud">
       <h1>Halkomisharjoitus</h1>
-      <p>Napsauta hiirell&auml; kirveen isku - osu klapiin pilkkoaksesi sen.</p>
+      <p>Napsauta klapia tai paina v&auml;lily&ouml;nti&auml;. Keskikohdan t&auml;ht&auml;ys toimii n&auml;pp&auml;imell&auml;.</p>
+      <div class="hud-stats">
+        <div class="hud-stat">
+          <span class="hud-stat-label">Pisteet</span>
+          <span class="hud-stat-value" id="score">0</span>
+        </div>
+        <div class="hud-stat">
+          <span class="hud-stat-label">Aika</span>
+          <span class="hud-stat-value" id="time">60 s</span>
+        </div>
+        <div class="hud-stat">
+          <span class="hud-stat-label">Putki</span>
+          <span class="hud-stat-value" id="streak">0 / 0</span>
+        </div>
+        <div class="hud-stat">
+          <span class="hud-stat-label">Tarkkuus</span>
+          <span class="hud-stat-value" id="accuracy">100%</span>
+        </div>
+      </div>
+      <div class="hud-controls">
+        <button id="restart" class="restart-button" type="button">Uusi kierros</button>
+        <span id="difficulty">Vaikeustaso: L&auml;mmittely</span>
+      </div>
       <span id="status">Valmiina iskuun</span>
     </div>
     <a class="back-button" href="index.html">Takaisin</a>
@@ -116,7 +209,14 @@
       import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js";
 
       const canvas = document.getElementById("scene");
+      const hud = document.getElementById("hud");
       const statusText = document.getElementById("status");
+      const scoreText = document.getElementById("score");
+      const timeText = document.getElementById("time");
+      const streakText = document.getElementById("streak");
+      const accuracyText = document.getElementById("accuracy");
+      const difficultyText = document.getElementById("difficulty");
+      const restartButton = document.getElementById("restart");
 
       const renderer = new THREE.WebGLRenderer({
         canvas,
@@ -126,6 +226,8 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.08;
 
       const scene = new THREE.Scene();
       scene.fog = new THREE.Fog(0x0b150d, 20, 50);
@@ -142,7 +244,17 @@
       const ambientLight = new THREE.AmbientLight(0xb3c9b3, 0.35);
       scene.add(ambientLight);
 
-      const spotlight = new THREE.SpotLight(0xf0f7ed, 1.9, 40, Math.PI / 5, 0.3, 1.1);
+      const hemisphereLight = new THREE.HemisphereLight(0xbad6c0, 0x2e2618, 0.28);
+      scene.add(hemisphereLight);
+
+      const spotlight = new THREE.SpotLight(
+        0xf0f7ed,
+        1.9,
+        40,
+        Math.PI / 5,
+        0.3,
+        1.1
+      );
       spotlight.position.set(6, 10, 6);
       spotlight.castShadow = true;
       spotlight.shadow.mapSize.width = 1024;
@@ -192,64 +304,180 @@
       choppingBlock.position.set(0, 0.4, 0);
       scene.add(choppingBlock);
 
+      function makeCanvasTexture(size, paint) {
+        const canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d");
+        paint(ctx, size);
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+        return texture;
+      }
+
+      const barkTexture = makeCanvasTexture(512, (ctx, size) => {
+        ctx.fillStyle = "#6c4a2b";
+        ctx.fillRect(0, 0, size, size);
+
+        for (let x = 0; x < size; x += 2) {
+          const dark = 52 + Math.floor(Math.random() * 40);
+          ctx.fillStyle = `rgba(${dark}, ${dark - 12}, ${dark - 24}, 0.2)`;
+          ctx.fillRect(x, 0, 1 + Math.random() * 2, size);
+        }
+
+        for (let i = 0; i < 60; i += 1) {
+          const y = Math.random() * size;
+          const width = 12 + Math.random() * 40;
+          const height = 2 + Math.random() * 6;
+          ctx.fillStyle = "rgba(32, 20, 12, 0.2)";
+          ctx.fillRect(Math.random() * (size - width), y, width, height);
+        }
+      });
+      barkTexture.repeat.set(1.8, 1.25);
+
+      const endGrainTexture = makeCanvasTexture(512, (ctx, size) => {
+        const center = size * 0.5;
+        const radius = size * 0.47;
+        ctx.fillStyle = "#c39057";
+        ctx.fillRect(0, 0, size, size);
+
+        for (let i = 0; i < 45; i += 1) {
+          const ringR = (i / 44) * radius;
+          const wobble = Math.sin(i * 0.85) * 2.2;
+          ctx.beginPath();
+          ctx.arc(center, center, ringR + wobble, 0, Math.PI * 2);
+          const c = 118 + Math.floor((i / 44) * 55);
+          ctx.strokeStyle = `rgba(${c}, ${c - 28}, ${c - 56}, 0.45)`;
+          ctx.lineWidth = 0.7 + (i % 3) * 0.4;
+          ctx.stroke();
+        }
+
+        for (let i = 0; i < 16; i += 1) {
+          const angle = (i / 16) * Math.PI * 2 + Math.random() * 0.15;
+          const length = radius * (0.25 + Math.random() * 0.55);
+          ctx.beginPath();
+          ctx.moveTo(center, center);
+          ctx.lineTo(
+            center + Math.cos(angle) * length,
+            center + Math.sin(angle) * length
+          );
+          ctx.strokeStyle = "rgba(80, 52, 32, 0.2)";
+          ctx.lineWidth = 1 + Math.random() * 1.1;
+          ctx.stroke();
+        }
+      });
+
+      const splitFaceTexture = makeCanvasTexture(512, (ctx, size) => {
+        ctx.fillStyle = "#c8955e";
+        ctx.fillRect(0, 0, size, size);
+
+        for (let x = 0; x < size; x += 3) {
+          const n = 138 + Math.floor(Math.random() * 45);
+          ctx.fillStyle = `rgba(${n}, ${n - 32}, ${n - 64}, 0.22)`;
+          ctx.fillRect(x, 0, 1 + Math.random() * 1.5, size);
+        }
+
+        for (let i = 0; i < 18; i += 1) {
+          const x = Math.random() * size;
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.bezierCurveTo(
+            x + (Math.random() - 0.5) * 20,
+            size * 0.35,
+            x + (Math.random() - 0.5) * 24,
+            size * 0.7,
+            x + (Math.random() - 0.5) * 16,
+            size
+          );
+          ctx.strokeStyle = "rgba(92, 62, 38, 0.18)";
+          ctx.lineWidth = 0.8 + Math.random();
+          ctx.stroke();
+        }
+      });
+      splitFaceTexture.repeat.set(1.1, 1);
+
       const barkMaterial = new THREE.MeshStandardMaterial({
-        color: 0x4f2c16,
-        roughness: 0.8,
-        metalness: 0.08,
-        side: THREE.DoubleSide,
+        color: 0x6d4727,
+        map: barkTexture,
+        roughness: 0.82,
+        metalness: 0.04,
       });
 
-      const woodMaterial = new THREE.MeshStandardMaterial({
-        color: 0xbe8d59,
+      const endGrainMaterial = new THREE.MeshStandardMaterial({
+        color: 0xd2a26f,
+        map: endGrainTexture,
         roughness: 0.55,
-        metalness: 0.03,
-        side: THREE.DoubleSide,
+        metalness: 0.02,
       });
 
-      let logGroup = null;
+      const splitFaceMaterial = new THREE.MeshStandardMaterial({
+        color: 0xd0a26f,
+        map: splitFaceTexture,
+        roughness: 0.5,
+        metalness: 0.02,
+      });
+
+      const splitEdgeMaterial = new THREE.MeshStandardMaterial({
+        color: 0x8a613d,
+        roughness: 0.64,
+        metalness: 0.02,
+      });
+
+      const chipGeometry = new THREE.BoxGeometry(0.06, 0.028, 0.02);
+      const chipMaterial = new THREE.MeshStandardMaterial({
+        color: 0xcc9b64,
+        roughness: 0.62,
+        metalness: 0.02,
+      });
+
       const logRadius = 0.35;
       const logHeight = 1.25;
       const logOrigin = new THREE.Vector3(0, 0.8 + logHeight / 2, 0);
-
-      function createLog() {
-        logGroup = new THREE.Group();
-
-        const outer = new THREE.Mesh(
-          new THREE.CylinderGeometry(logRadius, logRadius, logHeight, 48),
-          barkMaterial
+      const splitFaceThickness = logRadius * 0.085;
+      const splitFaceGeometry = new THREE.BoxGeometry(
+        splitFaceThickness,
+        logHeight * 0.97,
+        logRadius * 1.94,
+        2,
+        24,
+        10
+      );
+      const splitFacePositions = splitFaceGeometry.attributes.position;
+      for (let i = 0; i < splitFacePositions.count; i += 1) {
+        const x = splitFacePositions.getX(i);
+        const y = splitFacePositions.getY(i);
+        const z = splitFacePositions.getZ(i);
+        const centerFactor = 1 - Math.min(1, Math.abs(z) / (logRadius * 0.98));
+        const roughness =
+          Math.sin(y * 9.2 + z * 12.5) * 0.0028 +
+          Math.cos(y * 14.0) * 0.0019 +
+          (Math.random() - 0.5) * 0.0022;
+        const edgeLift = centerFactor * 0.0014;
+        splitFacePositions.setX(
+          i,
+          x + Math.sign(x || 1) * (roughness + edgeLift)
         );
-        outer.castShadow = true;
-        outer.receiveShadow = true;
-
-        const inner = new THREE.Mesh(
-          new THREE.CylinderGeometry(
-            logRadius * 0.85,
-            logRadius * 0.85,
-            logHeight + 0.01,
-            32
-          ),
-          woodMaterial
+        splitFacePositions.setZ(
+          i,
+          z + Math.sin(y * 7.1 + x * 90) * 0.0012 * centerFactor
         );
-        inner.castShadow = true;
-        inner.receiveShadow = true;
-
-        logGroup.add(outer, inner);
-        logGroup.position.copy(logOrigin);
-        scene.add(logGroup);
       }
-
-      createLog();
+      splitFacePositions.needsUpdate = true;
+      splitFaceGeometry.computeVertexNormals();
+      let logGroup = null;
 
       const axeGroup = new THREE.Group();
       axeGroup.position.copy(axeRestPosition);
-
       const axeVisual = new THREE.Group();
       axeVisual.position.set(0, -axePivotOffset, 0);
 
       const handleGeometry = new THREE.CylinderGeometry(0.085, 0.06, 2.8, 24, 32);
       const handlePositions = handleGeometry.attributes.position;
       const handleHalfHeight = 2.8 / 2;
-      for (let i = 0; i < handlePositions.count; i++) {
+      for (let i = 0; i < handlePositions.count; i += 1) {
         const y = handlePositions.getY(i);
         const t = (y + handleHalfHeight) / 2.8;
         const gripScale =
@@ -257,10 +485,11 @@
             ? 0.72 + 0.22 * Math.pow(Math.sin(Math.PI * Math.min(t, 0.65)), 2)
             : 0.72;
         const flareScale =
-          t > 0.65 ? 0.78 + 0.32 * Math.pow(Math.max(0, t - 0.65) * 1.7, 1.4) : 0.78;
+          t > 0.65
+            ? 0.78 + 0.32 * Math.pow(Math.max(0, t - 0.65) * 1.7, 1.4)
+            : 0.78;
         const scale = t < 0.65 ? gripScale : flareScale;
         const curveOffset = 0.26 * Math.pow(t, 1.5) - 0.14;
-
         handlePositions.setX(i, handlePositions.getX(i) * scale + curveOffset);
         handlePositions.setZ(i, handlePositions.getZ(i) * scale * 0.62);
       }
@@ -279,7 +508,10 @@
       axeHandle.position.set(-0.02, -0.05, 0.02);
       axeHandle.rotation.z = Math.PI / 38;
 
-      const pommel = new THREE.Mesh(new THREE.SphereGeometry(0.14, 20, 14), handleMaterial);
+      const pommel = new THREE.Mesh(
+        new THREE.SphereGeometry(0.14, 20, 14),
+        handleMaterial
+      );
       pommel.scale.set(1.12, 0.58, 0.7);
       pommel.position.set(-0.13, -1.38, 0.02);
       pommel.castShadow = true;
@@ -326,9 +558,8 @@
 
       const bladeGeometry = headGeometry.clone();
       const bladePositions = bladeGeometry.attributes.position;
-      for (let i = 0; i < bladePositions.count; i++) {
-        const z = bladePositions.getZ(i);
-        bladePositions.setZ(i, Math.max(z, -0.025));
+      for (let i = 0; i < bladePositions.count; i += 1) {
+        bladePositions.setZ(i, Math.max(bladePositions.getZ(i), -0.025));
       }
       bladePositions.needsUpdate = true;
       bladeGeometry.computeVertexNormals();
@@ -341,8 +572,6 @@
           metalness: 1,
         })
       );
-      axeBlade.castShadow = false;
-      axeBlade.receiveShadow = false;
 
       const eye = new THREE.Mesh(
         new THREE.CylinderGeometry(0.09, 0.1, 0.22, 20),
@@ -368,18 +597,107 @@
 
       const raycaster = new THREE.Raycaster();
       const pointer = new THREE.Vector2();
+      const clock = new THREE.Clock();
+
+      const roundDuration = 120;
+      let roundTimeLeft = roundDuration;
+      let score = 0;
+      let streak = 0;
+      let bestStreak = 0;
+      let attempts = 0;
+      let hits = 0;
+      let worldTime = 0;
 
       let isSwinging = false;
       let swingProgress = 0;
       let registerHit = false;
       let hasHit = false;
+      let isGameOver = false;
 
       let splitPieces = [];
+      let chips = [];
       let resetTimer = -1;
+      let currentDifficultyLabel = "";
+      const splitRestY = 1.02;
 
-      function createHalfLog(thetaStart, direction) {
+      function updateHud() {
+        const shownTime = Math.max(0, Math.ceil(roundTimeLeft));
+        const accuracy = attempts > 0 ? Math.round((hits / attempts) * 100) : 100;
+        scoreText.textContent = String(score);
+        timeText.textContent = `${shownTime} s`;
+        streakText.textContent = `${streak} / ${bestStreak}`;
+        accuracyText.textContent = `${accuracy}%`;
+      }
+
+      function difficultyProfile() {
+        const progress = THREE.MathUtils.clamp(
+          (roundDuration - roundTimeLeft) / roundDuration,
+          0,
+          1
+        );
+        const ramp = Math.pow(progress, 1.75);
+        const swayAmplitude = 0.24 + ramp * 0.9;
+        const swaySpeed = 1.45 + ramp * 2.45;
+        let label = "Lammittely";
+        if (progress >= 0.67) {
+          label = "Taysi vauhti";
+        } else if (progress >= 0.34) {
+          label = "Kiihtyva";
+        }
+        return {
+          progress,
+          swayAmplitude,
+          swaySpeed,
+          label,
+          scoreBonus: Math.round((0.5 + ramp) * 110),
+        };
+      }
+
+      function updateDifficulty(force = false) {
+        const profile = difficultyProfile();
+        if (force || profile.label !== currentDifficultyLabel) {
+          currentDifficultyLabel = profile.label;
+          difficultyText.textContent = `Vaikeustaso: ${profile.label}`;
+        }
+        return profile;
+      }
+
+      function clearSplitPieces() {
+        splitPieces.forEach((piece) => {
+          scene.remove(piece.group);
+        });
+        splitPieces = [];
+      }
+
+      function clearChips() {
+        chips.forEach((chip) => {
+          scene.remove(chip.mesh);
+        });
+        chips = [];
+      }
+
+      function createLog() {
+        if (logGroup) {
+          scene.remove(logGroup);
+        }
+        logGroup = new THREE.Group();
+
+        const fullLog = new THREE.Mesh(
+          new THREE.CylinderGeometry(logRadius, logRadius, logHeight, 48),
+          [barkMaterial, endGrainMaterial, endGrainMaterial]
+        );
+        fullLog.castShadow = true;
+        fullLog.receiveShadow = true;
+
+        logGroup.add(fullLog);
+        logGroup.position.copy(logOrigin);
+        scene.add(logGroup);
+      }
+
+      function createHalfLog(thetaStart, direction, basePosition) {
         const group = new THREE.Group();
-        const outerHalf = new THREE.Mesh(
+
+        const halfBody = new THREE.Mesh(
           new THREE.CylinderGeometry(
             logRadius,
             logRadius,
@@ -390,32 +708,61 @@
             thetaStart,
             Math.PI
           ),
-          barkMaterial
+          [barkMaterial, endGrainMaterial, endGrainMaterial]
         );
 
-        const innerHalf = new THREE.Mesh(
-          new THREE.CylinderGeometry(
-            logRadius * 0.85,
-            logRadius * 0.85,
-            logHeight + 0.01,
-            32,
-            1,
-            false,
-            thetaStart,
-            Math.PI
-          ),
-          woodMaterial
-        );
+        const splitFace = new THREE.Mesh(splitFaceGeometry, [
+          splitFaceMaterial,
+          splitFaceMaterial,
+          splitEdgeMaterial,
+          splitEdgeMaterial,
+          splitEdgeMaterial,
+          splitEdgeMaterial,
+        ]);
+        splitFace.position.x = direction * splitFaceThickness * 0.48;
+        splitFace.position.z = direction * 0.002;
 
-        [outerHalf, innerHalf].forEach((mesh) => {
+        [halfBody, splitFace].forEach((mesh) => {
           mesh.castShadow = true;
           mesh.receiveShadow = true;
           group.add(mesh);
         });
 
-        group.position.set(logOrigin.x + direction * 0.18, logOrigin.y, logOrigin.z);
+        group.position.set(
+          basePosition.x + direction * 0.18,
+          basePosition.y,
+          basePosition.z
+        );
         group.rotation.y = direction > 0 ? 0.05 : -0.05;
         return group;
+      }
+
+      function spawnChips(origin, count) {
+        for (let i = 0; i < count; i += 1) {
+          const mesh = new THREE.Mesh(chipGeometry, chipMaterial);
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
+          mesh.position.copy(origin);
+          mesh.position.x += (Math.random() - 0.5) * 0.25;
+          mesh.position.y += (Math.random() - 0.2) * 0.16;
+          mesh.position.z += (Math.random() - 0.5) * 0.22;
+          scene.add(mesh);
+
+          chips.push({
+            mesh,
+            velocity: new THREE.Vector3(
+              (Math.random() - 0.5) * 2.1,
+              1.3 + Math.random() * 1.2,
+              (Math.random() - 0.5) * 1.1
+            ),
+            spin: new THREE.Vector3(
+              (Math.random() - 0.5) * 8,
+              (Math.random() - 0.5) * 8,
+              (Math.random() - 0.5) * 8
+            ),
+            life: 0.9 + Math.random() * 0.6,
+          });
+        }
       }
 
       function splitLog() {
@@ -423,42 +770,51 @@
           return;
         }
 
+        const origin = logGroup.position.clone();
         scene.remove(logGroup);
         logGroup = null;
 
-        const leftHalf = createHalfLog(Math.PI / 2, -1);
-        const rightHalf = createHalfLog(-Math.PI / 2, 1);
-
+        const leftHalf = createHalfLog(Math.PI, -1, origin);
+        const rightHalf = createHalfLog(0, 1, origin);
         scene.add(leftHalf, rightHalf);
 
         splitPieces = [
           {
             group: leftHalf,
-            velocity: new THREE.Vector3(-0.9, 1.7, 0.14),
-            spin: new THREE.Vector3(0.18, 0.28, 0.95),
+            velocity: new THREE.Vector3(-0.78, 1.45, 0.18),
+            spin: new THREE.Vector3(0.22, 0.42, 0.36),
             direction: -1,
             resting: false,
           },
           {
             group: rightHalf,
-            velocity: new THREE.Vector3(0.9, 1.6, -0.14),
-            spin: new THREE.Vector3(-0.18, -0.26, -0.95),
+            velocity: new THREE.Vector3(0.78, 1.38, -0.18),
+            spin: new THREE.Vector3(-0.2, -0.4, -0.36),
             direction: 1,
             resting: false,
           },
         ];
 
+        spawnChips(origin.clone().add(new THREE.Vector3(0, 0.18, 0)), 16);
+
+        const bonus = 120 + (streak > 0 ? Math.min(streak, 8) * 18 : 0);
+        const gained = bonus + updateDifficulty().scoreBonus;
+        score += gained;
+        hits += 1;
+        streak += 1;
+        bestStreak = Math.max(bestStreak, streak);
+        statusText.textContent = `Osuma! +${gained} pistetta`;
+
         resetTimer = -1;
-        statusText.textContent = "Hieno isku! Klapi halkesi.";
+        updateHud();
       }
 
       function resetLog() {
-        splitPieces.forEach((piece) => {
-          scene.remove(piece.group);
-        });
-        splitPieces = [];
-        createLog();
-        statusText.textContent = "Valmiina iskuun";
+        clearSplitPieces();
+        if (!isGameOver) {
+          createLog();
+          statusText.textContent = "Valmiina iskuun";
+        }
       }
 
       function easeOutQuart(t) {
@@ -469,31 +825,121 @@
         return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
       }
 
+      function isLogHitFromScreen(screenX, screenY) {
+        if (!logGroup) {
+          return false;
+        }
+        pointer.x = (screenX / window.innerWidth) * 2 - 1;
+        pointer.y = -(screenY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(pointer, camera);
+        return raycaster.intersectObject(logGroup, true).length > 0;
+      }
+
       function startSwing(targeted) {
-        if (isSwinging) {
+        if (isSwinging || isGameOver) {
           return;
         }
-
         isSwinging = true;
         swingProgress = 0;
         registerHit = targeted;
         hasHit = false;
         statusText.textContent = targeted
-          ? "T\u00E4ht\u00E4\u00E4t klapiin..."
-          : "Isku karkasi - yrit\u00E4 uudestaan!";
+          ? "Tayta isku..."
+          : "Huti - yrita uudestaan";
       }
 
-      window.addEventListener("pointerdown", (event) => {
-        pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-        pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
-        raycaster.setFromCamera(pointer, camera);
-
-        let intersects = [];
-        if (logGroup) {
-          intersects = raycaster.intersectObject(logGroup, true);
+      function attemptSwing(targeted) {
+        if (isGameOver || isSwinging) {
+          return;
         }
+        if (!logGroup) {
+          statusText.textContent = "Odota hetki, uusi klapi tulossa";
+          return;
+        }
+        attempts += 1;
+        startSwing(targeted);
+        updateHud();
+      }
 
-        startSwing(intersects.length > 0);
+      function endRound() {
+        if (isGameOver) {
+          return;
+        }
+        isGameOver = true;
+        isSwinging = false;
+        swingProgress = 0;
+        registerHit = false;
+        hasHit = false;
+        resetTimer = -1;
+        axeGroup.position.copy(axeRestPosition);
+        axeGroup.rotation.x = startAngle;
+        hud.classList.add("game-over");
+        difficultyText.textContent = "Vaikeustaso: Kierros valmis";
+        statusText.textContent = `Aika loppui! Pisteet ${score} | Osumat ${hits}/${attempts}`;
+        updateHud();
+      }
+
+      function restartRound() {
+        roundTimeLeft = roundDuration;
+        score = 0;
+        streak = 0;
+        bestStreak = 0;
+        attempts = 0;
+        hits = 0;
+        isGameOver = false;
+        isSwinging = false;
+        swingProgress = 0;
+        registerHit = false;
+        hasHit = false;
+        resetTimer = -1;
+        worldTime = 0;
+
+        hud.classList.remove("game-over");
+        currentDifficultyLabel = "";
+        updateDifficulty(true);
+
+        if (logGroup) {
+          scene.remove(logGroup);
+          logGroup = null;
+        }
+        clearSplitPieces();
+        clearChips();
+        createLog();
+
+        axeGroup.position.copy(axeRestPosition);
+        axeGroup.rotation.x = startAngle;
+
+        statusText.textContent = "Valmiina iskuun";
+        updateHud();
+      }
+
+      restartButton.addEventListener("click", () => {
+        restartRound();
+      });
+
+      window.addEventListener("pointerdown", (event) => {
+        const target = event.target;
+        if (
+          target instanceof Element &&
+          (
+            target.closest(".back-button") ||
+            target.closest(".restart-button") ||
+            target.closest("#hud")
+          )
+        ) {
+          return;
+        }
+        attemptSwing(isLogHitFromScreen(event.clientX, event.clientY));
+      });
+
+      window.addEventListener("keydown", (event) => {
+        if (event.code !== "Space") {
+          return;
+        }
+        event.preventDefault();
+        attemptSwing(
+          isLogHitFromScreen(window.innerWidth * 0.5, window.innerHeight * 0.5)
+        );
       });
 
       window.addEventListener("resize", () => {
@@ -504,11 +950,36 @@
         camera.updateProjectionMatrix();
       });
 
-      const clock = new THREE.Clock();
-
       function animate() {
         requestAnimationFrame(animate);
         const delta = clock.getDelta();
+        worldTime += delta;
+        let profile = difficultyProfile();
+
+        if (!isGameOver) {
+          profile = updateDifficulty();
+          roundTimeLeft = Math.max(0, roundTimeLeft - delta);
+          if (roundTimeLeft <= 0) {
+            endRound();
+          }
+        }
+
+        if (logGroup && !isGameOver) {
+          const ramp = Math.pow(profile.progress, 1.75);
+          const zMultiplier = 0.95 + ramp * 0.72;
+          const rollMultiplier = 1.1 + ramp * 1.08;
+          logGroup.position.x =
+            logOrigin.x + Math.sin(worldTime * profile.swaySpeed) * profile.swayAmplitude;
+          logGroup.position.z =
+            logOrigin.z +
+            Math.cos(worldTime * profile.swaySpeed * 0.85) *
+              profile.swayAmplitude *
+              zMultiplier;
+          logGroup.rotation.z =
+            Math.sin(worldTime * profile.swaySpeed * 1.2) *
+            profile.swayAmplitude *
+            rollMultiplier;
+        }
 
         if (isSwinging) {
           swingProgress += delta / swingDuration;
@@ -533,7 +1004,9 @@
             swingProgress = 0;
             registerHit = false;
             if (!hasHit) {
-              statusText.textContent = "Ei osumaa - koeta uudestaan!";
+              streak = 0;
+              statusText.textContent = "Ei osumaa - koeta uudestaan";
+              updateHud();
             }
             axeGroup.position.copy(axeRestPosition);
             axeGroup.rotation.x = startAngle;
@@ -547,28 +1020,28 @@
             }
             piece.velocity.y -= 6.8 * delta;
             piece.group.position.addScaledVector(piece.velocity, delta);
-
             piece.group.rotation.x += piece.spin.x * delta;
             piece.group.rotation.y += piece.spin.y * delta;
             piece.group.rotation.z += piece.spin.z * delta;
 
-            if (piece.group.position.y <= 0.62) {
-              piece.group.position.y = 0.62;
+            if (piece.group.position.y <= splitRestY) {
+              piece.group.position.y = splitRestY;
               piece.velocity.set(0, 0, 0);
               piece.spin.set(0, 0, 0);
-              piece.group.rotation.x = piece.direction * 0.12;
-              piece.group.rotation.y = piece.direction * 0.22;
-              piece.group.rotation.z = piece.direction * -1.08;
+              piece.group.position.x += piece.direction * 0.05;
+              piece.group.position.z += piece.direction * 0.04;
+              piece.group.rotation.x = piece.direction * 0.06;
+              piece.group.rotation.y = piece.direction * 0.52;
+              piece.group.rotation.z = piece.direction * -0.48;
               piece.resting = true;
             }
           });
 
-          if (
-            splitPieces.every((piece) => piece.resting) &&
-            resetTimer < 0
-          ) {
-            resetTimer = 2.2;
-            statusText.textContent = "Halko hajosi - uusi klapi tulossa...";
+          if (splitPieces.every((piece) => piece.resting) && resetTimer < 0) {
+            resetTimer = 1.9;
+            statusText.textContent = isGameOver
+              ? "Kierros paattyi"
+              : "Halko hajosi - uusi klapi tulossa";
           }
 
           if (resetTimer > 0) {
@@ -579,9 +1052,32 @@
           }
         }
 
+        for (let i = chips.length - 1; i >= 0; i -= 1) {
+          const chip = chips[i];
+          chip.velocity.y -= 9.2 * delta;
+          chip.mesh.position.addScaledVector(chip.velocity, delta);
+          chip.mesh.rotation.x += chip.spin.x * delta;
+          chip.mesh.rotation.y += chip.spin.y * delta;
+          chip.mesh.rotation.z += chip.spin.z * delta;
+          chip.life -= delta;
+
+          if (chip.mesh.position.y <= 0.03) {
+            chip.mesh.position.y = 0.03;
+            chip.velocity.y *= -0.28;
+            chip.velocity.x *= 0.74;
+            chip.velocity.z *= 0.74;
+          }
+
+          if (chip.life <= 0) {
+            scene.remove(chip.mesh);
+            chips.splice(i, 1);
+          }
+        }
+
         renderer.render(scene, camera);
       }
 
+      restartRound();
       animate();
     </script>
   </body>
